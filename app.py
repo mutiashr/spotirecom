@@ -54,11 +54,12 @@ def describe_song_type(df, selected_songs):
     danceability_type = "easy to dance to" if avg_features['danceability'] > 0.7 else "better for relaxing"
     mood_type = "positive and cheerful" if avg_features['valence'] > 0.5 else "sad and melancholic"
     
-    description = f"It seems you enjoy songs that are {energy_type}, {danceability_type}, and {mood_type}. Here are some recommendations:"
+    description = f"hmmzz... keknya tipe lagu kamu ini yang {energy_type}, {danceability_type}, and {mood_type} gitu yaaah.... enih rekomendasinya:"
     return description
 
 # Streamlit UI
-st.title('🎵 Spotify Song Recommendation System')
+st.title('🎵 Sistem Rekomendasi Lagu Spotify✨')
+st.markdown("<small>Credit: enih project punya mutiw @sahiroww </small>", unsafe_allow_html=True)
 
 st.write("### Song List")
 st.dataframe(df[['track_name', 'track_artist', 'track_album_name']])
