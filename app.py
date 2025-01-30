@@ -2,12 +2,12 @@ import streamlit as st
 import pandas as pd
 import pickle
 
-# Load data processed dari Google Colab
+# Load data processed from Google Colab
 @st.cache_data
 def load_data():
     try:
-        df = pd.read_csv('processed_spotify_data.csv')
-        with open('similarity_matrix.pkl', 'rb') as f:
+        df = pd.read_csv('processed_spotify_data.csv')  # Load your preprocessed data
+        with open('similarity_matrix.pkl', 'rb') as f:  # Load the similarity matrix
             similarity_matrix = pickle.load(f)
         return df, similarity_matrix
     except Exception as e:
@@ -17,10 +17,9 @@ def load_data():
 df, similarity_matrix = load_data()
 
 if df is None or similarity_matrix is None:
-    st.stop()  # Jika data gagal dimuat, hentikan eksekusi lebih lanjut
+    st.stop()  # Stop execution if data loading fails
 
-# Fungsi rekomendasi
-# Fungsi rekomendasi dengan filter genre
+# Recommendation function with genre filter
 def recommend_songs_with_genre(selected_songs, df, similarity_matrix, top_n=5):
     selected_genres = df[df['track_name'].isin(selected_songs)]['track_genre'].unique()
     
@@ -31,7 +30,7 @@ def recommend_songs_with_genre(selected_songs, df, similarity_matrix, top_n=5):
     recommended_songs = []
     for idx in similar_songs_indices:
         if idx not in selected_indices:
-            # Filter lagu dengan genre yang sama
+            # Filter songs by the same genre
             if df.iloc[idx]['track_genre'] in selected_genres:
                 recommended_songs.append(df.iloc[idx])
             if len(recommended_songs) == top_n:
@@ -39,51 +38,51 @@ def recommend_songs_with_genre(selected_songs, df, similarity_matrix, top_n=5):
 
     return pd.DataFrame(recommended_songs)
 
-# Fungsi untuk mendeskripsikan tipe lagu
+# Function to describe the song type
 def describe_song_type(df, selected_songs):
-    # Pilih hanya kolom numerik
+    # Select only numeric columns
     numeric_features = df.select_dtypes(include=['float64', 'int64'])
     
-    # Filter berdasarkan lagu yang dipilih menggunakan track_name dari df asli
+    # Filter the dataframe by selected songs using track_name from the original df
     selected_df = df[df['track_name'].isin(selected_songs)]
     
-    # Ambil rata-rata fitur dari lagu yang dipilih
+    # Calculate the average feature values of the selected songs
     avg_features = selected_df[numeric_features.columns].mean()
 
-    # Tentukan tipe lagu berdasarkan beberapa fitur
-    energy_type = "enerjik dan penuh semangat" if avg_features['energy'] > 0.7 else "tenang dan santai"
-    danceability_type = "mudah untuk berdansa" if avg_features['danceability'] > 0.7 else "lebih cocok untuk mendengarkan secara santai"
-    mood_type = "positif dan ceria" if avg_features['valence'] > 0.5 else "sedih dan melankolis"
+    # Determine song type based on features
+    energy_type = "energetic and full of energy" if avg_features['energy'] > 0.7 else "calm and relaxed"
+    danceability_type = "easy to dance to" if avg_features['danceability'] > 0.7 else "better for relaxing"
+    mood_type = "positive and cheerful" if avg_features['valence'] > 0.5 else "sad and melancholic"
     
-    description = f"Sepertinya kamu menyukai lagu yang {energy_type}, {danceability_type}, dan {mood_type}. Berikut rekomendasi lagu untukmu:"
+    description = f"It seems you enjoy songs that are {energy_type}, {danceability_type}, and {mood_type}. Here are some recommendations:"
     return description
 
-# Tampilan Streamlit
-st.title('🎵 Sistem Rekomendasi Lagu Spotify')
+# Streamlit UI
+st.title('🎵 Spotify Song Recommendation System')
 
-st.write("### Daftar Lagu")
+st.write("### Song List")
 st.dataframe(df[['track_name', 'track_artist', 'track_album_name']])
 
-st.write("### Pilih 3-5 Lagu Favorit Anda")
+st.write("### Choose 3-5 Favorite Songs")
 
-# Menampilkan pilihan dengan format nama lagu + nama artis
+# Display options with song name and artist name
 unique_songs = df.drop_duplicates(subset=['track_name', 'track_artist'])
 selected_songs = st.multiselect(
-    "Pilih lagu:",
+    "Pick songs:",
     unique_songs['track_name'].unique(),
     format_func=lambda x: f"{x} - {unique_songs[unique_songs['track_name'] == x]['track_artist'].values[0]}",
     max_selections=5
 )
 
-if st.button("Dapatkan Rekomendasi"):
+if st.button("Get Recommendations"):
     if len(selected_songs) >= 3:
-        # Mendapatkan deskripsi tipe lagu yang dipilih
+        # Get the description of the selected songs
         description = describe_song_type(df, selected_songs)
         st.write(description)
 
-        # Mendapatkan rekomendasi lagu
-        recommendations = recommend_songs(selected_songs, df, similarity_matrix)
-        st.write("### Rekomendasi Lagu 🎶")
+        # Get song recommendations based on the selected songs
+        recommendations = recommend_songs_with_genre(selected_songs, df, similarity_matrix)
+        st.write("### Recommended Songs 🎶")
         st.dataframe(recommendations[['track_name', 'track_artist', 'track_album_name']])
     else:
-        st.error("Silakan pilih minimal 3 lagu.")
+        st.error("Please select at least 3 songs.")
