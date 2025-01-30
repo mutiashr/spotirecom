@@ -20,7 +20,10 @@ if df is None or similarity_matrix is None:
     st.stop()  # Jika data gagal dimuat, hentikan eksekusi lebih lanjut
 
 # Fungsi rekomendasi
-def recommend_songs(selected_songs, df, similarity_matrix, top_n=5):
+# Fungsi rekomendasi dengan filter genre
+def recommend_songs_with_genre(selected_songs, df, similarity_matrix, top_n=5):
+    selected_genres = df[df['track_name'].isin(selected_songs)]['track_genre'].unique()
+    
     selected_indices = df[df['track_name'].isin(selected_songs)].index
     avg_similarity = similarity_matrix[selected_indices].mean(axis=0)
     similar_songs_indices = avg_similarity.argsort()[::-1]
@@ -28,7 +31,9 @@ def recommend_songs(selected_songs, df, similarity_matrix, top_n=5):
     recommended_songs = []
     for idx in similar_songs_indices:
         if idx not in selected_indices:
-            recommended_songs.append(df.iloc[idx])
+            # Filter lagu dengan genre yang sama
+            if df.iloc[idx]['track_genre'] in selected_genres:
+                recommended_songs.append(df.iloc[idx])
             if len(recommended_songs) == top_n:
                 break
 
