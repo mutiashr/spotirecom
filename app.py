@@ -21,7 +21,7 @@ if df is None or similarity_matrix is None:
 
 # Recommendation function with genre filter
 def recommend_songs_with_genre(selected_songs, df, similarity_matrix, top_n=5):
-    selected_genres = df[df['track_name'].isin(selected_songs)]['track_genre'].unique()
+    selected_genres = df[df['track_name'].isin(selected_songs)]['playlist_genre'].unique()
     
     selected_indices = df[df['track_name'].isin(selected_songs)].index
     avg_similarity = similarity_matrix[selected_indices].mean(axis=0)
@@ -31,7 +31,7 @@ def recommend_songs_with_genre(selected_songs, df, similarity_matrix, top_n=5):
     for idx in similar_songs_indices:
         if idx not in selected_indices:
             # Filter songs by the same genre
-            if df.iloc[idx]['track_genre'] in selected_genres:
+            if df.iloc[idx]['playlist_genre'] in selected_genres:
                 recommended_songs.append(df.iloc[idx])
             if len(recommended_songs) == top_n:
                 break
